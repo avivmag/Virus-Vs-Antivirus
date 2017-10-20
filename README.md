@@ -1,9 +1,9 @@
 # Virus-Vs-Antivirus
 
 This repository is divided to two inseparable projects.
-The first one is a virus which search for a file named "ELFexec" (on the same directory it runs in) and infect it with its virus.
-The second program is an antivirus, which search for the same "ELFexec" file, scans it and checks for a predefined virus signatures.
-The antivirus is an evolution of the [Virus Detector](https://github.com/avivmag/Virus-Detector) (reading this repository is highly recommended for understanding how does it preload the signatures).
+The first one is a virus that is searching for a file named "ELFexec" (on the same directory it runs in) and infect it with its own code.
+The second program is an antivirus that searches for the same "ELFexec" file, scans it and checks for a predefined virus signatures. if it finds that this file is infected, it disinfect it immediatly.</br>
+The antivirus program is, in fact, an evolution of the [Virus Detector](https://github.com/avivmag/Virus-Detector) (reading this repository is highly recommended for understanding how does it preload the signatures from the "signatures" file).
 
 The development of this simulation was done as part of an assignment in "Computer Architecture" course at Ben-Gurion University in the second semester of 2016.
 
@@ -15,25 +15,25 @@ From Wikipedia (link attached below): "A computer virus is a type of malicious s
 
 In this assignment the virus searches for a file named "ELFexec" which is a linux Executable and Linkable Format (ELF) file and modify it so the file will have the virus's code in it.</br>
 Once the virus is attached to the victimed file, it replaces the file's entry point so it will point to the virus code, and adds at the end of the attached virus code a command to jump to the original file entry point.</br>
-The final result is an infected file which runs the virus code prior to the code itself and only after it finishes, it runs the original code as well.
+The final result is an infected file which runs the virus code prior to the code itself and only after it finishes, it runs the original program code as well.
 
 ## Position Independent Code (PIC)
 
-When an assembly file compilation is made, the compiler replaces some of the text labels to the address in the program of the label.</br>
-The problem with this compilation process is that after the virus infected other files, the infecting files will have exactly the same address of the address in the virus's label, meaning the infected file will receive some unknown addresses for use.</br>
-Note: using `call` is not included, because it is known in fact to be replaced with the delta distance of the current position of the code to the destinate labels so this case solves itself and will be in use in solving our issue.</br>
+When an assembly file compilation is made, the compiler replaces some of the text labels to the labels' addresses in the compiled program.</br>
+The problem with this compilation process is that after the virus infected other files, the infected files will have exactly the same already-compiled addresses of the addresses in the virus's labels, meaning the infected file will receive some unknown addresses for use instead of the ones that should be where the virus code dwells.</br>
+Note: using `call` is not included, because it is known in fact to be replaced with the delta distance of the current position of the code to the destinate labels, so this case solves itself and actualy will be in use in solving our issue.</br>
 For that, PIC trick has been created.</br>
-What this trick is all about is trying to figure from where this command which is using this label is being used, get the distance of the current position and replace the label with the current position + this delta distance.</br>
-Confused? well, I believe an example best be used here to demonstrate:</br>
-Well let's assume we have this code:
+What this trick is all about is trying to figure from where this command which is mentioning this label is being used, get the distance from the current position to the destinate label and replace the label with the truely calculated position of the label.</br>
+Confused? well, I believe an example would best be used here for demonstration:</br>
+Let's assume we have this code:
 ```
 jmp Label_1
 ... lines of code ...
 Label_1:
 ... some more lines of code ...
 ```
-Well, what will happen after we compile this program is that Label_1 will be replaced with an address of the actual Label_1 in the program. This is bad for us because this place will be changed once the code will run on another files that are not the original virus.</br>
-So, let's add partially the PIC trick:
+Label_1 will be replaced with an address of the program's actual address after compiling this program. This is bad for us because this place will be changed once the code will run on another files that are not the original virus.</br>
+Let's add (partially) the PIC trick:
 ```
 jmp Label_1
 ... lines of code ...
@@ -45,8 +45,8 @@ IndependedText_2:
 	pop edx
 	ret
 ```
-Ok, let's assume that we added this rows in a place that the program will not reach unless we explicitly said so.</br>
-For the fun part, let's change the `jmp Label_1`:
+Let's assume that we added this rows in a place that the program will not reach unless we explicitly called it.</br>
+For the full PIC trick, let's change the `jmp Label_1`:
 ```
 call 	IndependedText_1
 sub 	edx, IndependedText_2-Label_1
@@ -60,7 +60,7 @@ IndependedText_2:
 	pop edx
 	ret
 ```
-Do not panic~!</br>
+~Do not panic~!</br>
 Follow what is happening one step at a time.</br>
 `call IndependedText_1` - as mentioned above, calling is different than jumping. It pushes on the stack the current position of the code (The values that are in the EIP register), calculates the distance of the current position and the destinate one (IndependedText_1 label) and moves to it.</br>
 Now, on top of the stack we have the position of where we left.</br>
