@@ -60,15 +60,17 @@ IndependedText_2:
 	pop edx
 	ret
 ```
-~Do not panic~!</br>
-Follow what is happening one step at a time.</br>
-`call IndependedText_1` - as mentioned above, calling is different than jumping. It pushes on the stack the current position of the code (The values that are in the EIP register), calculates the distance of the current position and the destinate one (IndependedText_1 label) and moves to it.</br>
-Now, on top of the stack we have the position of where we left.</br>
-In independent_code_1 we immediatly do `call IndependedText_2`, which means we now push on top of the stack the position of IndependedText_1 and right after it the position we first jump from.</br>
-`pop edx` - We poped IndependedText_1 address to edx, which means we now have on top of the stack the position we first jump from and in edx register the position of IndependedText_1.</br>
-`ret` - we pop the position we first jump from to the EIP, meaning it currently position us on the next line of code - `sub 	edx, IndependedText_2-Label_1`.</br>
+Do not panic!</br>
+Let's try to follow what happend - one step at a time.</br>
+`call IndependedText_1` - as mentioned above, calling is different than jumping. In compilation process this call will calculates the distance of the current position and the destinate one (IndependedText_1 label) and replace its label with this calculated value. 
+At program run-time, it will push the current position of the code (The value that is in the EIP register) on the stack and jump the calculated delta distance to the destination.</br>
+Currently, on top of the stack we have the position of where we left.</br>
+In independent_code_1 we immediatly do `call IndependedText_2`, which means we now push on top of the stack the position of IndependedText_1, meaning the stack should have this two mentioned addresses.</br>
+`pop edx` - We poped IndependedText_1 address to edx, which means we now have on top of the stack the position from where we initially left off and edx register should store the position of IndependedText_1.</br>
+`ret` - we pop the position we initially jump from to the EIP, meaning it currently position us on this line of code - `sub 	edx, IndependedText_2-Label_1`.</br>
 After we do the next code edx should have the value: `IndependedText_2 - (IndependedText_2-Label_1)`, which means it has the PIC value of `Label_1` in hand.</br>
-Next, we just jump to the value in the edx variable (this time the compiler won't replace the label in this jump). And we've got to the point we wished independenly.
+Next, we just jump to the value in the edx variable (this time the compiler won't replace the label in this jump). </br>
+Now the code is position independent.
 
 ## Antivirus
 
@@ -89,17 +91,17 @@ The antivirus program receives a "signatures" file with the list of viruses we k
 	
 Note: this is how I used to build and run the program. There are many other well-known compilers to compile this assembly file for other types of operating systems.
 
-### Simulating all the process
+### Simulating the process
 
 1. open terminal and navigate to the virus program directory
 2. do this step only if virus rebuilt is needed: type `make` and press enter.
 3. type `./ELFexec` and press enter - you can see the program output.
-4. type `./Virus` and press enter - congratulation, you've infected the ELFexec (if "perhaps not message" is shown, something went wrong and the file is not infected).
+4. type `./Virus` and press enter - congratulation, you've infected the "ELFexec" file (if "perhaps not message" is shown, something went wrong and the file is not infected).
 5. type `./ELFexec` and press enter - you can see the program is now infected and trying to infect itself again.
 5. copy the infected file to the AntiVirus folder.
-6. move to the AntiVirus folder.
+6. open the AntiVirus folder.
 7. do this step only if AntiVirus rebuilt is needed: type `make` and press enter.
-8. type `./AntiVirus` and press enter - congratulation, you've disinfected the ELFexec.
+8. type `./AntiVirus` and press enter - congratulation, you've disinfected the "ELFexec" file.
 9. type `./ELFexec` and press enter - you can see the program is now disinfected.
 
 ## Built With
@@ -110,7 +112,7 @@ Note: this is how I used to build and run the program. There are many other well
 
 ## Useful links
 
-* The original source of the assignment: https://www.cs.bgu.ac.il/~caspl162/Lab3/Tasks?format=standalone.
+* The original source of the assignment: https://www.cs.bgu.ac.il/~caspl162/Lab92/Tasks?format=standalone.
 * https://en.wikipedia.org/wiki/Computer_virus.
 * https://en.wikipedia.org/wiki/Antivirus_software.
 * https://en.wikipedia.org/wiki/Position-independent_code.
